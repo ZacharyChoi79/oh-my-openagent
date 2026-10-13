@@ -194,6 +194,28 @@ const module: TuiPluginModule = {
       if (timer) clearTimeout(timer)
     })
   },
+  // V2 bridge: OpenCode V2 TUI loader calls setup(ctx) instead of tui(api)
+  setup: async (ctx: any) => {
+    // Emulate V1 api.state for V2 TUI context
+    ctx.state = {
+      path: { directory: process.cwd() },
+      session: {
+        permission: () => [],
+        question: () => [],
+        status: () => undefined,
+        get: () => undefined,
+        messages: () => [],
+      },
+    }
+    // Call the V1 tui function with the V2 context
+    if (typeof module.tui === "function") {
+      try {
+        await module.tui(ctx)
+      } catch (e) {
+        console.error("[omo-tui-bridge]", e instanceof Error ? e.message : String(e))
+      }
+    }
+  },
 }
 
 export default module
